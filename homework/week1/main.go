@@ -36,12 +36,13 @@ func main() {
 
 	booksInput := []Book{book1, book2, book3}
 	bookListResult := DeleteElementByValue(booksInput, book1)
-	fmt.Println(bookListResult)
+	fmt.Println(bookListResult) // Output: [{How to improve your personality John Wick social 3}]
 
-	// 4. Used for remove the comparable elements without using DeepEqual recursive function.
+	// 4. Used for removing the comparable elements by value without using DeepEqual recursive function.
 	names := []string{"Gary", "Jason", "Daniel", "David", "Bob", "Alex", "Bob"}
 	updatedResult := DeleteElementByValueForComparableElements(names, "Bob")
 	fmt.Println(updatedResult)
+	// Output: [Gary Jason Daniel David Alex]
 
 	// TODO: 抱歉我没太懂什么是缩容
 }
