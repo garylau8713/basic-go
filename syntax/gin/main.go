@@ -1,12 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func main() {
 	server := gin.Default()
+	server.Use(func(ctx *gin.Context) {
+		fmt.Println("This is First Middleware")
+	}, func(context *gin.Context) {
+		fmt.Println("This is Second MiddleWare")
+	})
 
 	// Static Route
 	server.GET("/hello", func(context *gin.Context) {
