@@ -1,6 +1,8 @@
 package web
 
 import (
+	"basic-go/webook/internal/domain"
+	"basic-go/webook/internal/service"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -19,12 +21,16 @@ type UserHandler struct {
 	// Pre compile
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
+	svc              *service.UserService
 }
 
-func NewUserHandler() *UserHandler {
+// Follow the dependency injection pattern
+
+func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
+		svc:              svc,
 	}
 }
 
@@ -90,6 +96,14 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 
+	err = h.svc.SignUp(ctx, domain.User{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, "Internal System Error.")
+		return
+	}
 	ctx.String(http.StatusOK, "hello, you have signed up successfully.")
 
 }
