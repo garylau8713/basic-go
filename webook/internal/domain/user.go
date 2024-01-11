@@ -7,6 +7,7 @@ type User struct {
 	Email    string
 	Password string
 
+	// Use UTC 0 time
 	Ctime time.Time
 	Utime time.Time
 }
