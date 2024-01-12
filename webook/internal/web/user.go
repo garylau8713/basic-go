@@ -100,12 +100,16 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	})
-	if err != nil {
-		ctx.String(http.StatusOK, "Internal System Error.")
-		return
-	}
-	ctx.String(http.StatusOK, "hello, you have signed up successfully.")
 
+	// Need to check the conflict for emails
+	switch err {
+	case nil:
+		ctx.String(http.StatusOK, "hello, you have signed up successfully.")
+	case service.ErrDuplicateEmail:
+		ctx.String(http.StatusOK, "email name has already existed.")
+	default:
+		ctx.String(http.StatusOK, "Internal System Error.")
+	}
 }
 
 func (h *UserHandler) Login(ctx *gin.Context) {

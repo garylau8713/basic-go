@@ -6,6 +6,8 @@ import (
 	"context"
 )
 
+var ErrorDuplicateEmail = dao.ErrDuplicateEmail
+
 type UserRepository struct {
 	dao *dao.UserDao
 }
