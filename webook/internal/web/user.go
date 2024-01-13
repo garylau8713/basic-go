@@ -113,7 +113,25 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 }
 
 func (h *UserHandler) Login(ctx *gin.Context) {
+	type Req struct {
+		// Here is a tag, defined the tag name email in json
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
 
+	_, err := h.svc.Login(ctx, req.Email, req.Password)
+	switch err {
+	case nil:
+		ctx.String(http.StatusOK, "Login Success.")
+	case service.ErrInvalidUserOrPassword:
+		ctx.String(http.StatusOK, "UserName or Password is incorrect.")
+	default:
+		ctx.String(http.StatusOK, "Internal System Error.")
+	}
 }
 
 func (h *UserHandler) Edit(ctx *gin.Context) {

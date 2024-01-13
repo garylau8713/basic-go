@@ -4,10 +4,14 @@ import (
 	"basic-go/webook/internal/domain"
 	"basic-go/webook/internal/repository"
 	"context"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var ErrDuplicateEmail = repository.ErrorDuplicateEmail
+var (
+	ErrDuplicateEmail        = repository.ErrorDuplicateEmail
+	ErrInvalidUserOrPassword = errors.New("user doesn't exist or Password is incorrect")
+)
 
 type UserService struct {
 	// TODO: The reason that we choose to use pointer is
@@ -31,4 +35,20 @@ func (svc *UserService) SignUp(ctx context.Context, u domain.User) error {
 	}
 	u.Password = string(hash)
 	return svc.repo.Create(ctx, u)
+}
+
+func (svc *UserService) Login(ctx context.Context, email string, password string) (domain.User, error) {
+	u, err := svc.repo.FindByEmail(ctx, email)
+	if errors.Is(err, repository.ErrorUserNotFound) {
+		return domain.User{}, ErrInvalidUserOrPassword
+	}
+	if err != nil {
+		return domain.User{}, err
+	}
+	// Check whether password the same
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	if err != nil {
+		return domain.User{}, ErrInvalidUserOrPassword
+	}
+	return u, nil
 }

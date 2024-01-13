@@ -6,7 +6,12 @@ import (
 	"context"
 )
 
-var ErrorDuplicateEmail = dao.ErrDuplicateEmail
+var (
+	ErrorDuplicateEmail = dao.ErrDuplicateEmail
+	// repo layer should be coupling with biz logic.
+	// So use User not Record for parameter name
+	ErrorUserNotFound = dao.ErrRecordNotFound
+)
 
 type UserRepository struct {
 	dao *dao.UserDao
@@ -24,4 +29,20 @@ func (repo *UserRepository) Create(ctx context.Context, u domain.User) error {
 		Email:    u.Email,
 		Id:       u.Id,
 	})
+}
+
+func (repo *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+	u, err := repo.dao.FindByEmail(ctx, email)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return repo.toDomain(u), nil
+}
+
+func (repo *UserRepository) toDomain(u dao.User) domain.User {
+	return domain.User{
+		Id:       u.Id,
+		Password: u.Password,
+		Email:    u.Email,
+	}
 }
