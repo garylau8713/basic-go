@@ -4,6 +4,7 @@ import (
 	"basic-go/webook/internal/domain"
 	"basic-go/webook/internal/service"
 	regexp "github.com/dlclark/regexp2"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -123,9 +124,18 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	_, err := h.svc.Login(ctx, req.Email, req.Password)
+	u, err := h.svc.Login(ctx, req.Email, req.Password)
 	switch err {
 	case nil:
+		sess := sessions.Default(ctx)
+		sess.Set("userId", u.Id)
+		sess.Options(sessions.Options{
+			MaxAge: 900,
+		})
+		err = sess.Save()
+		if err != nil {
+			ctx.String(http.StatusOK, "Internal System Error.")
+		}
 		ctx.String(http.StatusOK, "Login Success.")
 	case service.ErrInvalidUserOrPassword:
 		ctx.String(http.StatusOK, "UserName or Password is incorrect.")
@@ -139,5 +149,5 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 }
 
 func (h *UserHandler) Profile(ctx *gin.Context) {
-
+	ctx.String(http.StatusOK, "This is Profile.")
 }

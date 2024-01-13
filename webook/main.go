@@ -5,8 +5,11 @@ import (
 	"basic-go/webook/internal/repository/dao"
 	"basic-go/webook/internal/service"
 	"basic-go/webook/internal/web"
+	"basic-go/webook/internal/web/middleware"
 	"fmt"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -71,5 +74,15 @@ func initWebServer() *gin.Engine {
 	}), func(ctx *gin.Context) {
 		fmt.Println("This is middleware")
 	})
+
+	//Init Session
+	//  存储数据的，也就是userId存哪里
+	// 直接存cookie
+	store := cookie.NewStore([]byte("secret"))
+	login := &middleware.LoginMiddlewareBuilder{}
+	// First one to init sessions
+	// Second one to use for checking login
+	server.Use(sessions.Sessions("ssid", store),
+		login.CheckLogin())
 	return server
 }
