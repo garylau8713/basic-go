@@ -130,7 +130,7 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 		sess := sessions.Default(ctx)
 		sess.Set("userId", u.Id)
 		sess.Options(sessions.Options{
-			MaxAge: 900,
+			MaxAge: 30,
 		})
 		err = sess.Save()
 		if err != nil {
