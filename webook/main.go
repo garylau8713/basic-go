@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -77,8 +77,18 @@ func initWebServer() *gin.Engine {
 
 	//Init Session
 	//  存储数据的，也就是userId存哪里
-	// 直接存cookie
-	store := cookie.NewStore([]byte("secret"))
+	//// 直接存cookie
+	//store := cookie.NewStore([]byte("secret"))
+	// 不存在cookie里面，现在用别的存
+	// 基于内存的实现，single instance利用memcache来存session
+	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
+		[]byte("GONdbXwcBYhLJjYq7EX2cyKkzCR7XiC5"),
+		[]byte("l564gjjcmHIksYTGmDSliSjDFj7an4mk"))
+	if err != nil {
+		panic(err)
+	}
+	//store := memstore.NewStore([]byte("GONdbXwcBYhLJjYq7EX2cyKkzCR7XiC5"),
+	//	[]byte("l564gjjcmHIksYTGmDSliSjDFj7an4mk"))
 	login := &middleware.LoginMiddlewareBuilder{}
 	// First one to init sessions
 	// Second one to use for checking login
