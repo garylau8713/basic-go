@@ -6,7 +6,9 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"time"
 )
 
 const (
@@ -45,7 +47,8 @@ func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	// POST /users/signup
 	ug.POST("/signup", h.SignUp)
 	// POST /users/login
-	ug.POST("/login", h.Login)
+	//ug.POST("/login", h.Login)
+	ug.POST("/login", h.LoginJWT)
 	// POST /users/edit
 	ug.POST("/edit", h.Edit)
 	// This endpoint is used to get the user basic profile info.
@@ -144,10 +147,53 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 	}
 }
 
+func (h *UserHandler) LoginJWT(ctx *gin.Context) {
+	type Req struct {
+		// Here is a tag, defined the tag name email in json
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	u, err := h.svc.Login(ctx, req.Email, req.Password)
+	switch err {
+	case nil:
+		uc := UserClaims{
+			Uid: u.Id,
+			RegisteredClaims: jwt.RegisteredClaims{
+				// 1分钟过期
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			},
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS512, uc)
+		tokenStr, err := token.SignedString(JWTKey)
+		if err != nil {
+			ctx.String(http.StatusOK, "Internal System Error.")
+		}
+		ctx.Header("x-jwt-token", tokenStr)
+		ctx.String(http.StatusOK, "Login Success.")
+	case service.ErrInvalidUserOrPassword:
+		ctx.String(http.StatusOK, "UserName or Password is incorrect.")
+	default:
+		ctx.String(http.StatusOK, "Internal System Error.")
+	}
+}
+
 func (h *UserHandler) Edit(ctx *gin.Context) {
 
 }
 
 func (h *UserHandler) Profile(ctx *gin.Context) {
+	//us := ctx.MustGet("user").(UserClaims)
 	ctx.String(http.StatusOK, "This is Profile.")
+}
+
+var JWTKey = []byte("GONdbXwcBYhLJjYq7EX2cyKkzCR7XiC6")
+
+type UserClaims struct {
+	jwt.RegisteredClaims
+	Uid int64
 }

@@ -64,6 +64,9 @@ func initWebServer() *gin.Engine {
 		// Added the header "authorization" because the browser log out the error message said the server side
 		// can not take "authorization" header. For the webook-fe, it does pass the "authorization" header.
 		AllowHeaders: []string{"Content-Type", "authorization"},
+		// 允许前端访问的你的后端响应中带的头部
+		ExposeHeaders: []string{"x-jwt-token"},
+
 		AllowOriginFunc: func(origin string) bool {
 			if strings.HasPrefix(origin, "http://localhost") {
 				return true
@@ -75,6 +78,19 @@ func initWebServer() *gin.Engine {
 		fmt.Println("This is middleware")
 	})
 
+	useJWT(server)
+	//useSession(server)
+
+	return server
+}
+
+func useJWT(server *gin.Engine) {
+	login := &middleware.LoginJWTMiddlewareBuilder{}
+	server.Use(login.CheckLogin())
+
+}
+
+func useSession(server *gin.Engine) {
 	//Init Session
 	//  存储数据的，也就是userId存哪里
 	//// 直接存cookie
@@ -94,5 +110,4 @@ func initWebServer() *gin.Engine {
 	// Second one to use for checking login
 	server.Use(sessions.Sessions("ssid", store),
 		login.CheckLogin())
-	return server
 }
