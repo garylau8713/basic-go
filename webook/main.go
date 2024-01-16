@@ -6,11 +6,13 @@ import (
 	"basic-go/webook/internal/service"
 	"basic-go/webook/internal/web"
 	"basic-go/webook/internal/web/middleware"
+	"basic-go/webook/pkg/ginx/middleware/ratelimit"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"strings"
@@ -78,6 +80,12 @@ func initWebServer() *gin.Engine {
 		fmt.Println("This is middleware")
 	})
 
+	// 限流尽可能放在前面
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	// 这块已经用于接入限流插件
+	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 1).Build())
 	useJWT(server)
 	//useSession(server)
 
@@ -94,15 +102,15 @@ func useSession(server *gin.Engine) {
 	//Init Session
 	//  存储数据的，也就是userId存哪里
 	//// 直接存cookie
-	//store := cookie.NewStore([]byte("secret"))
+	store := cookie.NewStore([]byte("secret"))
 	// 不存在cookie里面，现在用别的存
 	// 基于内存的实现，single instance利用memcache来存session
-	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
-		[]byte("GONdbXwcBYhLJjYq7EX2cyKkzCR7XiC5"),
-		[]byte("l564gjjcmHIksYTGmDSliSjDFj7an4mk"))
-	if err != nil {
-		panic(err)
-	}
+	//store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
+	//	[]byte("GONdbXwcBYhLJjYq7EX2cyKkzCR7XiC5"),
+	//	[]byte("l564gjjcmHIksYTGmDSliSjDFj7an4mk"))
+	//if err != nil {
+	//	panic(err)
+	//}
 	//store := memstore.NewStore([]byte("GONdbXwcBYhLJjYq7EX2cyKkzCR7XiC5"),
 	//	[]byte("l564gjjcmHIksYTGmDSliSjDFj7an4mk"))
 	login := &middleware.LoginMiddlewareBuilder{}
