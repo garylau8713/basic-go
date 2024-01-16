@@ -52,6 +52,12 @@ func (m *LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 			return
 		}
 
+		if uc.UserAgent != ctx.GetHeader("User-Agent") {
+			// 后期讲到监控，要注意埋点
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
 		// 不判定都可以
 		expireTime, _ := uc.GetExpirationTime()
 		//if expireTime.Before(time.Now()) {
